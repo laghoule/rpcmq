@@ -1,0 +1,9 @@
+#
+# Start the daemon with these config.
+# Multiple files allowed, separated by space. 
+#
+# If AUTOSTART = "", don't start anything.
+# If RUN_AS_USER = "", run as root.
+# 
+AUTOSTART=""
+RUN_AS_USER=""
