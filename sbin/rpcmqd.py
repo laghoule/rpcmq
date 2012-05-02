@@ -9,10 +9,10 @@ import pika
 import syslog
 import ConfigParser
 
-usage = """Usage: rpcmqd.py -c config_file
-"""
+usage = "Usage: rpcmqd.py -c config_file"
 
 def read_config(config_file, section, var):
+    "Read config and return value"
     config = ConfigParser.RawConfigParser()
     config.read(config_file)
 
@@ -21,10 +21,11 @@ def read_config(config_file, section, var):
 
 
 def execute_cmd(ch, method, props, cmd):
+    "Execute command in /opt/rpc-scripts path"
     rpc_cmd = "/opt/rpc-scripts/%s" % (cmd,)
     response = os.system(rpc_cmd)
 
-    syslog_msg = ("rpc-script /opt/rpc-scripts/%s return status code %s") % (rpc_cmd, response)
+    syslog_msg = ("os.system %s return status code %s") % (rpc_cmd, response)
     syslog.openlog("rpcmqd")
     syslog.syslog(syslog_msg)
 
@@ -32,7 +33,8 @@ def execute_cmd(ch, method, props, cmd):
     ch.basic_ack(delivery_tag = method.delivery_tag)
 
 
-def amqp_receive(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey):
+def amqp_consume(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey):
+    "Create and assign queue to an exchange"
     ha = {}
     ha["x-ha-policy"]="all"
 
@@ -51,6 +53,7 @@ def amqp_receive(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey
 
 
 def main():
+    "Main function"
     if len(sys.argv) >= 3 and sys.argv[1] == "-c":
         if os.path.exists(sys.argv[2]):
             config_file = sys.argv[2]
@@ -64,7 +67,7 @@ def main():
         else:
             err_msg = "File %s don't exist" % (sys.argv[2],)
             raise ValueError(err_msg)
-        amqp_receive(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey)
+        amqp_consume(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey)
     else:
         raise ValueError(usage)
 
