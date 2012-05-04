@@ -1,0 +1,11 @@
+Source: rpcmqd
+Section: misc
+Priority: extra
+Maintainer: Debian package builder <debbuild@onebigplanet.com>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+
+Package: rpcmqd
+Architecture: any
+Depends: python-pika(>=0.9.5), python, sudo
+Description: OBP server to do RPC call via AMQP protocol.

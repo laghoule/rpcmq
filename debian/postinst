@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Verify if rpcmq group exist
+groupmod rpcmq &> /dev/null
+if [ $? == 6 ] ; then
+        groupadd rpcmq
+fi
+
+# Verify of rpcmq user exist
+usermod rpcmq &> /dev/null
+if [ $? == 6 ]; then
+	useradd -g rpcmq -s /bin/false rpcmq
+fi
+
+chmod 750 /usr/sbin/rpcmqd.py /opt/rpc-scripts/*
+chown -R rpcmq:rpcmq /usr/sbin/rpcmqd.py /opt/rpc-scripts/*
+
+# Add to runlevel
+update-rc.d rpcmqd defaults

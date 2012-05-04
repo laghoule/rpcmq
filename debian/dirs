@@ -1,0 +1,5 @@
+/etc/rpcmq
+/etc/init.d
+/etc/default
+/usr/sbin
+/opt/rpc-scripts
