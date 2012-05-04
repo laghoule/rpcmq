@@ -23,7 +23,7 @@ def read_config(config_file, section, var):
     return value
 
 
-class rpc_client:
+class ClientRPC:
     def __init__(self, amqp_server, rpc_timeout, virtualhost, credentials, amqp_exchange):
         'Connect to the AMQP bus'
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
@@ -46,7 +46,7 @@ class rpc_client:
         if self.corr_id == props.correlation_id:
             self.response = cmd
 
-    def send_msg(self, amqp_server, amqp_exchange, amqp_rkey, amqp_msg):
+    def produce_msg(self, amqp_server, amqp_exchange, amqp_rkey, amqp_msg):
         'Send AMQ msg'
         self.response = None
         self.corr_id = str(uuid.uuid4())
@@ -74,8 +74,8 @@ def main():
         else:
             err_msg = "File %s don't exist" % (sys.argv[2])
             raise IOError(err_msg) 
-        client = rpc_client(amqp_server, int(rpc_timeout), virtualhost, credentials, amqp_exchange)
-        response = client.send_msg(amqp_server, amqp_exchange, amqp_rkey, sys.argv[3])
+        client = ClientRPC(amqp_server, int(rpc_timeout), virtualhost, credentials, amqp_exchange)
+        response = client.produce_msg(amqp_server, amqp_exchange, amqp_rkey, sys.argv[3])
     else:
         raise ValueError(usage)
 

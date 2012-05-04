@@ -13,6 +13,8 @@ import ConfigParser
 
 usage = "Usage: rpcmqd.py -c config_file"
 
+__metaclass__ = type
+
 def read_config(config_file, section, var):
     "Read config and return value"
     config = ConfigParser.RawConfigParser()
