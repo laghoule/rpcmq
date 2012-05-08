@@ -34,11 +34,14 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/<packagename>
-	#$(MAKE) prefix=`pwd`/debian/`dh_listpackages`/usr install
-	install -m 755 -o root -g root $(CURDIR)/etc/init.d/* $(CURDIR)/debian/rpcmqd/etc/init.d/
-	install -m 644 -o root -g root $(CURDIR)/etc/default/* $(CURDIR)/debian/rpcmqd/etc/default/
-	install -m 644 -o root -g root $(CURDIR)/sbin/rpcmqd.py $(CURDIR)/debian/rpcmqd/usr/sbin/
-	install -m 755 -o root -g root $(CURDIR)/rpc-scripts/* $(CURDIR)/debian/rpcmqd/opt/rpc-scripts/
+	# rpcmqd
+	install -m 755 -o root -g root $(CURDIR)/etc/init.d/* $(CURDIR)/debian/rpcmq-server/etc/init.d/
+	install -m 644 -o root -g root $(CURDIR)/etc/default/* $(CURDIR)/debian/rpcmq-server/etc/default/
+	install -m 644 -o root -g root $(CURDIR)/sbin/rpcmqd.py $(CURDIR)/debian/rpcmq-server/usr/sbin/
+	install -m 755 -o root -g root $(CURDIR)/rpc-scripts/* $(CURDIR)/debian/rpcmq-server/opt/rpc-scripts/
+
+	# rpcmq
+	install -m 644 -o root -g root $(CURDIR)/bin/rpcmq.py $(CURDIR)/debian/rpcmq-client/usr/bin/
 
 # Build architecture-independent files here.
 binary-indep: build install

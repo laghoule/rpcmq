@@ -1,4 +1,4 @@
-rpcmqd (0.2-13) stable; urgency=low
+rpcmq (0.2-13) stable; urgency=low
 
   * Add support to RUN_AS_USER 
 
