@@ -83,11 +83,11 @@ def main():
         if os.path.exists(sys.argv[2]):
             config_file = sys.argv[2]
             amqp_server = read_config(config_file, "main", "server")
-            amqp_exchange = read_config(config_file, "queue", "exchange")
-            amqp_rkey = read_config(config_file, "queue", "routing_key")
-            virtualhost = read_config(config_file, "queue", "virtualhost")
-            username = read_config(config_file, "queue", "username")
-            password = read_config(config_file, "queue", "password")
+            amqp_exchange = read_config(config_file, "rpc-context", "exchange")
+            amqp_rkey = read_config(config_file, "rpc-context", "routing_key")
+            virtualhost = read_config(config_file, "rpc-context", "virtualhost")
+            username = read_config(config_file, "rpc-context", "username")
+            password = read_config(config_file, "rpc-context", "password")
             credentials = pika.PlainCredentials(username, password)
         else:
             err_msg = "File %s don't exist" % (sys.argv[2],)
