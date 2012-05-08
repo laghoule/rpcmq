@@ -28,9 +28,6 @@ class ServerRPC:
     def __init__(self, amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey):
         "Connect to AMQP bus and request queue, and bind to exchange"
 
-        ha = {}
-        ha["x-ha-policy"]="all"
-
         while True:
             try:
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
