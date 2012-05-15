@@ -25,12 +25,18 @@ def read_config(config_file, section, var):
 
 
 class ServerRPC:
-    def __init__(self, amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey):
+    def __init__(self, amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey, ssl_info):
         "Connect to AMQP bus and request queue, and bind to exchange"
 
         while True:
             try:
-                self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
+                if ssl_info.get('enable') == "on":
+                    self.ssl_options = { 'cacerts': ssl_info.get('cacert'), 'certfile': ssl_info.get('cert'), 'keyfile': ssl_info.get('key') }
+                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost, ssl=True, ssl_options=self.ssl_options)) 
+                elif ssl_info.get('enable') == "off":
+                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
+                else:
+                    raise Exception("ssl enable = on/off")
                 self.channel = self.connection.channel()
             except socket.error, err:
                 print "Connection error (%s), will try again in 5 sec..." % (err)
@@ -85,11 +91,16 @@ def main():
             virtualhost = read_config(config_file, "rpc-context", "virtualhost")
             username = read_config(config_file, "rpc-context", "username")
             password = read_config(config_file, "rpc-context", "password")
+            ssl_enable = read_config(config_file, "ssl", "enable")
+            cacertfile = read_config(config_file, "ssl", "cacertfile")
+            certfile = read_config(config_file, "ssl", "certfile")
+            keyfile = read_config(config_file, "ssl", "keyfile")
+            ssl = { 'enable': ssl_enable, 'cacert': cacertfile, 'cert': certfile, 'key': keyfile } 
             credentials = pika.PlainCredentials(username, password)
         else:
             err_msg = "File %s don't exist" % (sys.argv[2],)
             raise ValueError(err_msg)
-        client = ServerRPC(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey)
+        client = ServerRPC(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey, ssl)
         client.consume_msg()
     else:
         raise ValueError(usage)
