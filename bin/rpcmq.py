@@ -29,12 +29,12 @@ class ClientRPC:
         'Connect to the AMQP bus'
 
         try:
-            if ssl.get('enable') = "on":
+            if ssl.get('enable') == "on":
                 #self.ssl_options = { 'ca_certs': ssl_info.get('cacert'), 'certfile': ssl_info.get('cert'), 'keyfile': ssl_info.get('key') }
                 #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost, ssl=True, ssl_options=self.ssl_options))
                 print "AMQPS support broken right now (blame pika)... fallback to normal AMQP"
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
-            elif ssl.get('enable') = "off":
+            elif ssl.get('enable') == "off":
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
         except Exception, err:
             print "Exception: %s" % (err)
