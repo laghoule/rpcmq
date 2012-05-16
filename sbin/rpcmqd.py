@@ -17,6 +17,7 @@ __metaclass__ = type
 
 def read_config(config_file, section, var):
     "Read config and return value"
+
     config = ConfigParser.RawConfigParser()
     config.read(config_file)
 
