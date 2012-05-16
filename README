@@ -1,1 +1,12 @@
-README
+Requirement
+------------
+
+python
+python-pika
+
+Description
+-----------
+
+Send remote command to a server via AMQP bus. I used this to make some automation with AWS autoscaling and puppet.
+
+PS: AMQPS is currently broken in pika library, should be available in next version (0.9.6)
