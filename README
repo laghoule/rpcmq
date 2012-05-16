@@ -9,4 +9,19 @@ Description
 
 Send remote command to a server via AMQP bus. I used this to make some automation with AWS autoscaling and puppet.
 
+
+Install
+-------
+
+Debian way: Just build the package, debuild...
+
+To install the listening daemon: dpkg --install rpcmq-server
+To install the client: dpkg --install rpcmq-client
+
+The old way: 
+create /etc/rpcmq /opt/rpcmq
+copy etc/* /etc/rpcmq/
+copy bin sbin to /opt/rpcmq/
+copy rpc-scripts to /opt
+
 PS: AMQPS is currently broken in pika library, should be available in next version (0.9.6)
