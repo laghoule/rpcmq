@@ -10,20 +10,9 @@ import os
 import pika
 import syslog
 import ConfigParser
-
-usage = "Usage: rpcmqd.py -c config_file"
+import argparse
 
 __metaclass__ = type
-
-def read_config(config_file, section, var):
-    "Read config and return value"
-
-    config = ConfigParser.RawConfigParser()
-    config.read(config_file)
-
-    value = config.get(section, var)
-    return value
-
 
 class ServerRPC:
     def __init__(self, amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey, ssl_info):
@@ -32,17 +21,23 @@ class ServerRPC:
         while True:
             try:
                 if ssl_info.get('enable') == "on":
-                    #self.ssl_options = { 'ca_certs': ssl_info.get('cacert'), 'certfile': ssl_info.get('cert'), 'keyfile': ssl_info.get('key') }
-                    #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost, ssl=True, ssl_options=self.ssl_options)) 
-                    print "AMQPS support broken right now (blame pika)... fallback to normal AMQP"
-                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
+                    #self.ssl_options = { 'ca_certs': ssl_info.get('cacert'), 
+                    #                    'certfile': ssl_info.get('cert'), 'keyfile': ssl_info.get('key') }
+                    #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
+                    #                            credentials=credentials, virtual_host=virtualhost, ssl=True,
+                    #                            ssl_options=self.ssl_options)) 
+                    print "AMQPS support broken right now..."
+                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
+                                            credentials=credentials, virtual_host=virtualhost))
                 elif ssl_info.get('enable') == "off":
-                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, credentials=credentials, virtual_host=virtualhost))
+                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
+                                            credentials=credentials, virtual_host=virtualhost))
                 else:
                     raise Exception("ssl enable = on/off")
                 self.channel = self.connection.channel()
             except socket.error, err:
-                print "Connection error (%s), will try again in 5 sec..." % (err)
+                print """Connection error (%s), will try again 
+                        in 5 sec...""" % (err)
                 time.sleep(5)
             except Exception, err:
                 print "Error (%s), will try again in 5 sec..." % (err)
@@ -53,7 +48,8 @@ class ServerRPC:
         self.result = self.channel.queue_declare(exclusive=True)
         self.amqp_queue = self.result.method.queue
 
-        self.channel.queue_bind(exchange=amqp_exchange, queue=self.amqp_queue, routing_key=amqp_rkey)
+        self.channel.queue_bind(exchange=amqp_exchange, queue=self.amqp_queue,
+                       routing_key=amqp_rkey)
 
     def __execute_cmd__(self, response_channel, method, properties, cmd):
         "Execute command in /opt/rpc-scripts path"
@@ -65,7 +61,10 @@ class ServerRPC:
         syslog.openlog("rpcmqd")
         syslog.syslog(self.syslog_msg)
 
-        response_channel.basic_publish(exchange='', routing_key=properties.reply_to, properties=pika.BasicProperties(correlation_id=properties.correlation_id), body=str(self.response))
+        response_channel.basic_publish(exchange='', routing_key=properties.reply_to, 
+                            properties=pika.BasicProperties(correlation_id=properties.correlation_id),
+                            body=str(self.response))
+
         response_channel.basic_ack(delivery_tag = method.delivery_tag)
 
         return self.response
@@ -85,29 +84,40 @@ class ServerRPC:
 def main():
     "Main function"
 
-    if len(sys.argv) >= 3 and sys.argv[1] == "-c":
-        if os.path.exists(sys.argv[2]):
-            config_file = sys.argv[2]
-            amqp_server = read_config(config_file, "main", "server")
-            amqp_exchange = read_config(config_file, "rpc-context", "exchange")
-            amqp_rkey = read_config(config_file, "rpc-context", "routing_key")
-            virtualhost = read_config(config_file, "rpc-context", "virtualhost")
-            username = read_config(config_file, "rpc-context", "username")
-            password = read_config(config_file, "rpc-context", "password")
-            ssl_enable = read_config(config_file, "ssl", "enable")
-            cacertfile = read_config(config_file, "ssl", "cacertfile")
-            certfile = read_config(config_file, "ssl", "certfile")
-            keyfile = read_config(config_file, "ssl", "keyfile")
-            ssl = { 'enable': ssl_enable, 'cacert': cacertfile, 'cert': certfile, 'key': keyfile } 
-            credentials = pika.PlainCredentials(username, password)
-        else:
-            err_msg = "File %s don't exist" % (sys.argv[2],)
-            raise ValueError(err_msg)
-        client = ServerRPC(amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey, ssl)
-        client.consume_msg()
-    else:
-        raise ValueError(usage)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", dest="config",
+                help="path to config FILE", metavar="FILE")
 
+    args = parser.parse_args()
+    
+    if not args.config:
+        parser.print_help()
+        sys.exit(1)
 
-main()
+    config_file = open(args.config, "r")
+    config = ConfigParser.RawConfigParser()
+    config.readfp(config_file)
 
+    amqp_server = config.get("main", "server")
+    amqp_exchange = config.get("rpc-context", "exchange")
+    amqp_rkey = config.get("rpc-context", "routing_key")
+    virtualhost = config.get("rpc-context", "virtualhost")
+    username = config.get("rpc-context", "username")
+    password = config.get("rpc-context", "password")
+    ssl_enable = config.get("ssl", "enable")
+    cacertfile = config.get("ssl", "cacertfile")
+    certfile = config.get("ssl", "certfile")
+    keyfile = config.get("ssl", "keyfile")
+
+    ssl = { 'enable': ssl_enable, 'cacert': cacertfile, 
+            'cert': certfile, 'key': keyfile } 
+
+    credentials = pika.PlainCredentials(username, password)
+
+    client = ServerRPC(amqp_server, virtualhost, credentials, 
+                amqp_exchange, amqp_rkey, ssl)
+
+    client.consume_msg()
+
+if __name__ == "__main__":
+    main()
