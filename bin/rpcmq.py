@@ -10,8 +10,6 @@ import pika
 import ConfigParser
 import argparse
 
-usage = "Usage: rpcmqd.py -c config_file cmd"
-
 __metaclass__ = type
 
 class ClientRPC:
