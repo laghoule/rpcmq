@@ -15,20 +15,22 @@ __metaclass__ = type
 class ClientRPC:
     def __init__(self, amqp_server, rpc_timeout, virtualhost, credentials, 
             amqp_exchange, ssl):
-        'Connect to the AMQP bus'
+        "Connect to the AMQP bus"
 
         try:
             if ssl.get('enable') == "on":
                 #self.ssl_options = { 'ca_certs': ssl_info.get('cacert'),
-                #        'certfile': ssl_info.get('cert'), 'keyfile': ssl_info.get('key') }
-                #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server, 
-                #        credentials=credentials, virtual_host=virtualhost, ssl=True, ssl_options=self.ssl_options))
+                #                       'certfile': ssl_info.get('cert'),
+                #                       'keyfile': ssl_info.get('key') }
+                #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
+                #                           credentials=credentials, virtual_host=virtualhost,
+                #                           ssl=True, ssl_options=self.ssl_options))
                 print "AMQPS support broken right now..."
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
-                                     credentials=credentials, virtual_host=virtualhost))
+                                            credentials=credentials, virtual_host=virtualhost))
             elif ssl.get('enable') == "off":
                 self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
-                                     credentials=credentials, virtual_host=virtualhost))
+                                            credentials=credentials, virtual_host=virtualhost))
         except Exception, err:
             print "AMQP broker exception: %s" % (err)
             self.__on_close__()
@@ -44,23 +46,25 @@ class ClientRPC:
                         queue=self.callback_queue)
 
     def __on_timeout__(self):
-        'Execute on send timeout'
+        "Execute on send timeout"
 
         self.connection.close()
         self.excep_msg = "Consumer timeout (timeout %s)" % (self.timeout)
         raise Exception(self.excep_msg)
 
     def __on_response__(self, ch, method, props, cmd):
-        'Check if reponse correspond to the right ID'
+        "Check if reponse correspond to the right ID"
 
         if self.corr_id == props.correlation_id:
             self.response = cmd
 
     def __on_close__():
+        "Close network connection"
+
         self.connection.close()
 
     def produce_msg(self, amqp_server, amqp_exchange, amqp_rkey, amqp_msg):
-        'Send AMQ msg'
+        "Send AMQ msg"
 
         self.response = None
         self.corr_id = str(uuid.uuid4())
@@ -75,7 +79,7 @@ class ClientRPC:
 
 
 def main():
-    'Main function'
+    "Main function"
 
     parser = argparse.ArgumentParser()
     parser.add_argument("cmd", help="command to be executed remotely")
