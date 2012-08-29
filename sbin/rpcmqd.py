@@ -3,6 +3,7 @@
 # Written by Pascal Gauthier <pgauthier@onebigplanet.com>
 # 03.09.2012 
 
+import pwd
 import daemon
 import atexit
 import fcntl
@@ -10,6 +11,7 @@ import socket
 import time
 import sys
 import os
+import subprocess
 import pika
 import syslog
 import ConfigParser
@@ -56,6 +58,9 @@ class ServerRPC:
     def __init__(self, amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey, ssl_info):
         "Connect to AMQP bus and request queue, and bind to exchange"
 
+        # Vars
+        self.rpc_cmdpath = "/opt/rpc-scripts/bin/"
+
         while True:
             try:
                 if ssl_info.get('enable') == "on":
@@ -92,12 +97,18 @@ class ServerRPC:
     def __execute_cmd__(self, response_channel, method, properties, cmd):
         "Execute command in /opt/rpc-scripts path"
 
-        self.rpc_cmd = "/opt/rpc-scripts/" + cmd
-        self.response = os.system(self.rpc_cmd)
+        # Log file for the rpc-scripts
+        rpc_cmdlog = open("/opt/rpc-scripts/log/" + cmd + ".log", "a+", 0)
 
-        self.syslog_msg = ("%s: os.system return status code %s") % (self.rpc_cmd, self.response)
+        # Subprocess to execute
+        self.response = subprocess.call(self.rpc_cmdpath + cmd, 
+                            stdout=rpc_cmdlog,
+                            stderr=rpc_cmdlog,
+                            shell=True)
+
+        self.syslog_msg = ("%s: return status code %s") % (self.rpc_cmdpath + cmd, self.response)
         syslog.openlog("rpcmqd")
-        syslog.syslog(self.syslog_msg)
+        print syslog.syslog(self.syslog_msg)
 
         # Send a reponse to the client
         response_channel.basic_publish(exchange='', routing_key=properties.reply_to, 
@@ -115,9 +126,8 @@ class ServerRPC:
         self.amqp_channel.basic_consume(self.__execute_cmd__, queue=self.amqp_queue)
         try:
             self.amqp_channel.start_consuming()
-        except KeyboardInterrupt, err:
+        except KeyboardInterrupt, err: 
             print "Keyboard interruption"
-            #self.close()
 
     def close(self):
         "Close all connection"
@@ -143,6 +153,7 @@ def main():
     config.readfp(config_file)
 
     amqp_server = config.get("main", "server")
+    run_as_uid = config.get("main", "run_as_uid")
     amqp_exchange = config.get("rpc-context", "exchange")
     amqp_rkey = config.get("rpc-context", "routing_key")
     virtualhost = config.get("rpc-context", "virtualhost")
@@ -159,12 +170,16 @@ def main():
     credentials = pika.PlainCredentials(username, password)
 
     # Daemonification
-    stdout_file = open('/var/log/rpcmqd.log', 'a', 0)
+    stdout_file = open('/opt/rpc-scripts/log/rpcmqd.log', 'a', 0)
     context = daemon.DaemonContext(
-                detach_process=False,
+                working_directory="/opt/rpc-scripts/",
+                umask=022,
+                uid=pwd.getpwnam(run_as_uid).pw_uid,
+                gid=pwd.getpwnam(run_as_uid).pw_gid,
+                detach_process=False, # For debug purpose
                 stdout=stdout_file,
                 stderr=stdout_file,
-                pidfile=PidFile("/var/run/rpcmqd.pid")
+                pidfile=PidFile("lock/rpcmqd.pid")
                 )
 
     with context:
