@@ -106,9 +106,13 @@ class ServerRPC:
                             stderr=rpc_cmdlog,
                             shell=True)
 
+        # Trace to syslog
         self.syslog_msg = ("%s: return status code %s") % (self.rpc_cmdpath + cmd, self.response)
         syslog.openlog("rpcmqd")
-        print syslog.syslog(self.syslog_msg)
+        syslog.syslog(self.syslog_msg)
+
+        # Close the rpc_cmdlog
+        rpc_cmdlog.close()
 
         # Send a reponse to the client
         response_channel.basic_publish(exchange='', routing_key=properties.reply_to, 
@@ -152,8 +156,10 @@ def main():
     config = ConfigParser.RawConfigParser()
     config.readfp(config_file)
 
+    # Config vars
     amqp_server = config.get("main", "server")
     run_as_uid = config.get("main", "run_as_uid")
+    run_with_umask = config.get("main", "run_with_umask")
     amqp_exchange = config.get("rpc-context", "exchange")
     amqp_rkey = config.get("rpc-context", "routing_key")
     virtualhost = config.get("rpc-context", "virtualhost")
@@ -170,10 +176,10 @@ def main():
     credentials = pika.PlainCredentials(username, password)
 
     # Daemonification
-    stdout_file = open('/opt/rpc-scripts/log/rpcmqd.log', 'a', 0)
+    stdout_file = open('/opt/rpc-scripts/log/rpcmqd.log', 'a+', 0)
     context = daemon.DaemonContext(
                 working_directory="/opt/rpc-scripts/",
-                umask=022,
+                umask=int(run_with_umask),
                 uid=pwd.getpwnam(run_as_uid).pw_uid,
                 gid=pwd.getpwnam(run_as_uid).pw_gid,
                 detach_process=False, # For debug purpose
