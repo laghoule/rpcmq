@@ -3,6 +3,9 @@
 # Written by Pascal Gauthier <pgauthier@onebigplanet.com>
 # 03.09.2012 
 
+import daemon
+import atexit
+import fcntl
 import socket
 import time
 import sys
@@ -14,6 +17,41 @@ import argparse
 
 __metaclass__ = type
 
+class PidFile(object):
+    """Context manager that locks a pid file.  Implemented as class
+    not generator because daemon.py is calling .__exit__() with no parameters
+    instead of the None, None, None specified by PEP-343.
+
+    From: http://code.activestate.com/recipes/577911-context-manager-for-a-daemon-pid-file/"""
+    # pylint: disable=R0903
+
+    def __init__(self, path):
+        self.path = path
+        self.pidfile = None
+
+    def __enter__(self):
+        self.pidfile = open(self.path, "a+")
+        try:
+            fcntl.flock(self.pidfile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError:
+            raise SystemExit("Already running according to " + self.path)
+        self.pidfile.seek(0)
+        self.pidfile.truncate()
+        self.pidfile.write(str(os.getpid()))
+        self.pidfile.flush()
+        self.pidfile.seek(0)
+        return self.pidfile
+
+    def __exit__(self, exc_type=None, exc_value=None, exc_tb=None):
+        try:
+            self.pidfile.close()
+        except IOError as err:
+            # ok if file was just closed elsewhere
+            if err.errno != 9:
+                raise
+        os.remove(self.path)
+
+
 class ServerRPC:
     def __init__(self, amqp_server, virtualhost, credentials, amqp_exchange, amqp_rkey, ssl_info):
         "Connect to AMQP bus and request queue, and bind to exchange"
@@ -23,32 +61,32 @@ class ServerRPC:
                 if ssl_info.get('enable') == "on":
                     #self.ssl_options = { 'ca_certs': ssl_info.get('cacert'), 
                     #                    'certfile': ssl_info.get('cert'), 'keyfile': ssl_info.get('key') }
-                    #self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
+                    #self.amqp_connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
                     #                            credentials=credentials, virtual_host=virtualhost, ssl=True,
                     #                            ssl_options=self.ssl_options)) 
                     print "AMQPS support broken right now..."
-                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
+                    self.amqp_connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
                                             credentials=credentials, virtual_host=virtualhost))
                 elif ssl_info.get('enable') == "off":
-                    self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
+                    self.amqp_connection = pika.BlockingConnection(pika.ConnectionParameters(host=amqp_server,
                                             credentials=credentials, virtual_host=virtualhost))
                 else:
                     raise Exception("ssl enable = on/off")
-                self.channel = self.connection.channel()
+                self.amqp_channel = self.amqp_connection.channel()
             except socket.error, err:
                 print """Connection error (%s), will try again 
                         in 5 sec...""" % (err)
                 time.sleep(5)
             except Exception, err:
                 print "Error (%s), will try again in 5 sec..." % (err)
-                self.connection.close()
+                self.amqp_connection.close()
             else:
                 break
 
-        self.result = self.channel.queue_declare(exclusive=True)
+        self.result = self.amqp_channel.queue_declare(exclusive=True)
         self.amqp_queue = self.result.method.queue
 
-        self.channel.queue_bind(exchange=amqp_exchange, queue=self.amqp_queue,
+        self.amqp_channel.queue_bind(exchange=amqp_exchange, queue=self.amqp_queue,
                        routing_key=amqp_rkey)
 
     def __execute_cmd__(self, response_channel, method, properties, cmd):
@@ -61,6 +99,7 @@ class ServerRPC:
         syslog.openlog("rpcmqd")
         syslog.syslog(self.syslog_msg)
 
+        # Send a reponse to the client
         response_channel.basic_publish(exchange='', routing_key=properties.reply_to, 
                             properties=pika.BasicProperties(correlation_id=properties.correlation_id),
                             body=str(self.response))
@@ -72,13 +111,18 @@ class ServerRPC:
     def consume_msg(self):
         "Consume AMQP message"
 
-        self.channel.basic_qos(prefetch_count=1)
-        self.channel.basic_consume(self.__execute_cmd__, queue=self.amqp_queue)
+        self.amqp_channel.basic_qos(prefetch_count=1)
+        self.amqp_channel.basic_consume(self.__execute_cmd__, queue=self.amqp_queue)
         try:
-            self.channel.start_consuming()
+            self.amqp_channel.start_consuming()
         except KeyboardInterrupt, err:
             print "Keyboard interruption"
-            self.connection.close()
+            #self.close()
+
+    def close(self):
+        "Close all connection"
+
+        self.amqp_connection.close()
 
 
 def main():
@@ -114,10 +158,25 @@ def main():
 
     credentials = pika.PlainCredentials(username, password)
 
-    client = ServerRPC(amqp_server, virtualhost, credentials, 
-                amqp_exchange, amqp_rkey, ssl)
+    # Daemonification
+    stdout_file = open('/var/log/rpcmqd.log', 'a', 0)
+    context = daemon.DaemonContext(
+                detach_process=False,
+                stdout=stdout_file,
+                stderr=stdout_file,
+                pidfile=PidFile("/var/run/rpcmqd.pid")
+                )
 
-    client.consume_msg()
+    with context:
+        client = ServerRPC(amqp_server, virtualhost, credentials, 
+                    amqp_exchange, amqp_rkey, ssl)
+
+        # Run when exiting
+        atexit.register(client.close)
+
+        # Consume
+        client.consume_msg()
+
 
 if __name__ == "__main__":
     main()
