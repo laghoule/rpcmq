@@ -14,7 +14,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="rpcmqd daemon"
 NAME=rpcmqd
 DAEMON="/usr/sbin/rpcmqd.py"
-PIDFILE=/var/run/rpcmqd
+PIDFILE=/opt/rpc-scripts/run/rpcmqd
 
 . /lib/lsb/init-functions
 
@@ -22,17 +22,12 @@ PIDFILE=/var/run/rpcmqd
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
 case "$1" in
-start)
+    start)
         echo -n "Starting RPC messaging daemon:" "rpcmqd "
         for NAME in $AUTOSTART ; do
             if [ ! -e $PIDFILE-$NAME.pid ]; then
                 echo -n "$NAME "
-                if [ $RUN_AS_USER != "" ]; then
-                    sudo -u $RUN_AS_USER $DAEMON -c /etc/rpcmq/rpcmqd-$NAME.conf &
-                else
-                    $DAEMON -c /etc/rpcmq/rpcmqd-$NAME.conf &
-                fi
-                echo $! > $PIDFILE-$NAME.pid
+                $DAEMON -c /etc/rpcmq/rpcmqd-$NAME.conf 
             else
                 echo 
                 echo "Pidfile already exit $PIDFILE-$NAME.pid"
@@ -41,26 +36,25 @@ start)
         done
         echo
         ;;
-stop)
+    stop)
         echo -n "Stopping RPC messaging daemon:" "rpcmqd "
         for NAME in $AUTOSTART ; do
             echo -n "$NAME "
-            kill `pgrep -f "$DAEMON -c /etc/rpcmq/rpcmqd-$NAME.conf"`
-            rm $PIDFILE-$NAME.pid 
+            kill `cat /opt/rpc-scripts/run/rpcmqd-$NAME.pid`
         done
         echo
         ;;
-restart)
+    restart)
         echo "Restarting RPC messaging daemon:" "rpcmqd"
         $0 stop
         $0 start
         ;;
-status)
+    status)
         for NAME in $AUTOSTART ; do
             status_of_proc -p $PIDFILE-$NAME $DAEMON $NAME && exit 0 || exit $?
         done
         ;;
-*)  log_action_msg "Usage: /etc/init.d/rpcmqd {start|stop|status|restart}"
+    *)  log_action_msg "Usage: /etc/init.d/rpcmqd {start|stop|status|restart}"
         exit 2
         ;;
 esac

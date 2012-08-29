@@ -3,7 +3,8 @@
 # Multiple files allowed, separated by space. 
 #
 # If AUTOSTART = "", don't start anything.
-# If RUN_AS_USER = "", run as root.
-# 
+# if AUTOSTART = "ecom1 ecom2", will try to start 2 daemon with config of:
+#   /etc/rpcmq/rpcmqd-ecom1.conf
+#   /etc/rpcmq/rpcmqd-ecom2.conf 
+#
 AUTOSTART=""
-RUN_AS_USER=""

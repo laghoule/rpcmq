@@ -1,2 +1,1 @@
-* Run as user
-* Chose location of the pidfile
+* Add lock file for running script

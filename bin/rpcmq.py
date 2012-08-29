@@ -96,8 +96,8 @@ def main():
     config = ConfigParser.RawConfigParser()
     config.readfp(config_file)
 
-    amqp_server = config.get("main", "server")
-    rpc_timeout = config.get("main", "rpc_timeout")
+    amqp_server = config.get("main", "amqp_server")
+    rpc_timeout = config.get("main", "rpc_cmd_timeout")
     amqp_exchange = config.get("rpc-context", "exchange")
     amqp_rkey = config.get("rpc-context", "routing_key")
     virtualhost = config.get("rpc-context", "virtualhost")

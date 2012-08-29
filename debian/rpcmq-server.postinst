@@ -12,8 +12,9 @@ if [ $? == 6 ]; then
 	useradd -g rpcmq -s /bin/false rpcmq
 fi
 
-chmod 750 /usr/sbin/rpcmqd.py /opt/rpc-scripts/*
-chown -R rpcmq:rpcmq /usr/sbin/rpcmqd.py /opt/rpc-scripts/*
+chmod 750 /usr/sbin/rpcmqd.py
+chmod 770 /opt/rpc-scripts/run /opt/rpc-scripts/log
+chown -R rpcmq:rpcmq /usr/sbin/rpcmqd.py /opt/rpc-scripts/run /opt/rpc-scripts/log
 
 # Add to runlevel
 update-rc.d rpcmqd defaults

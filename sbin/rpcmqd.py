@@ -156,8 +156,11 @@ def main():
     config = ConfigParser.RawConfigParser()
     config.readfp(config_file)
 
+    # Uniq name for pid and log, based on config name
+    rpcmqd_instance = args.config.split("/")[-1].split(".conf")[0]
+
     # Config vars
-    amqp_server = config.get("main", "server")
+    amqp_server = config.get("main", "amqp_server")
     run_as_uid = config.get("main", "run_as_uid")
     run_with_umask = config.get("main", "run_with_umask")
     amqp_exchange = config.get("rpc-context", "exchange")
@@ -176,7 +179,7 @@ def main():
     credentials = pika.PlainCredentials(username, password)
 
     # Daemonification
-    stdout_file = open('/opt/rpc-scripts/log/rpcmqd.log', 'a+', 0)
+    stdout_file = open("/opt/rpc-scripts/log/" + rpcmqd_instance + ".log", "a+", 0)
     context = daemon.DaemonContext(
                 working_directory="/opt/rpc-scripts/",
                 umask=int(run_with_umask),
@@ -185,7 +188,7 @@ def main():
                 detach_process=False, # For debug purpose
                 stdout=stdout_file,
                 stderr=stdout_file,
-                pidfile=PidFile("lock/rpcmqd.pid")
+                pidfile=PidFile("run/" + rpcmqd_instance + ".pid")
                 )
 
     with context:

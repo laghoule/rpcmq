@@ -3,3 +3,6 @@ etc/init.d
 etc/default
 usr/sbin
 opt/rpc-scripts
+opt/rpc-scripts/bin
+opt/rpc-scripts/run
+opt/rpc-scripts/log
