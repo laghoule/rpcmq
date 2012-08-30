@@ -1,7 +1,7 @@
 Source: rpcmq
 Section: misc
 Priority: extra
-Maintainer: Debian package builder <debbuild@onebigplanet.com>
+Maintainer: Debbuilder <debbuilder@nihilisme.ca>
 Build-Depends: debhelper (>= 7.0.50~)
 Standards-Version: 3.8.4
 

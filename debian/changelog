@@ -2,7 +2,7 @@ rpcmq (0.2-13) stable; urgency=low
 
   * Add support to RUN_AS_USER 
 
- -- Debian package builder <debbuild@onebigplanet.com>  Wed, 28 Mar 2012 14:27:23 -0400
+ -- Debbuilder <debbuilder@nihilisme.ca> Wed, 28 Mar 2012 14:27:23 -0400
 
 rpcmqd (0.2-12) stable; urgency=low
 
