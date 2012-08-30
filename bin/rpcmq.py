@@ -115,8 +115,13 @@ def main():
 
     client = ClientRPC(amqp_server, int(rpc_timeout), virtualhost,
                 credentials, amqp_exchange, ssl)
+
+    # Send the request to AMQP broker, and wait for reponse
     response = client.produce_msg(amqp_server, amqp_exchange, 
                 amqp_rkey, sys.argv[3])
+
+    # Exit with response
+    sys.exit(response)
 
 if __name__ == "__main__":
     main()
