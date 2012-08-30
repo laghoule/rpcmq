@@ -21,6 +21,13 @@ PIDFILE=/opt/rpc-scripts/run/rpcmqd
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
 
+# Check if AUTOSTART = "" then daemon is disabled
+if [ -z $AUTOSTART ]; then
+    echo "rpcmqd daemon is disabled in /etc/default/rpcmq"
+    echo
+    exit 1
+fi
+
 case "$1" in
     start)
         echo -n "Starting RPC messaging daemon:" "rpcmqd "

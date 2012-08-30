@@ -2,8 +2,8 @@
 # Start the daemon with these config.
 # Multiple files allowed, separated by space. 
 #
-# If AUTOSTART = "", don't start anything.
-# if AUTOSTART = "ecom1 ecom2", will try to start 2 daemon with config of:
+# If AUTOSTART = "", disable rpcmqd daemon
+# if AUTOSTART = "ecom1 ecom2", will try to start 2 daemons with config:
 #   /etc/rpcmq/rpcmqd-ecom1.conf
 #   /etc/rpcmq/rpcmqd-ecom2.conf 
 #

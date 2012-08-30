@@ -42,7 +42,7 @@ install: build
 	install -m 755 -o root -g root $(CURDIR)/etc/init.d/* $(CURDIR)/debian/rpcmq-server/etc/init.d/
 	install -m 644 -o root -g root $(CURDIR)/etc/default/* $(CURDIR)/debian/rpcmq-server/etc/default/
 	install -m 644 -o root -g root $(CURDIR)/sbin/rpcmqd.py $(CURDIR)/debian/rpcmq-server/usr/sbin/
-	install -m 755 -o root -g root $(CURDIR)/rpc-scripts/* $(CURDIR)/debian/rpcmq-server/opt/rpc-scripts/
+	install -m 755 -o root -g root $(CURDIR)/rpc-scripts/* $(CURDIR)/debian/rpcmq-server/opt/rpc-scripts/bin/
 
 	# rpcmq-client
 	install -m 644 -o root -g root $(CURDIR)/bin/rpcmq.py $(CURDIR)/debian/rpcmq-client/usr/bin/

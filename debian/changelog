@@ -1,3 +1,9 @@
+rpcmq (0.3-1) stable; urgency=low
+
+  * Multiple change, see git changelog 
+
+ -- Debbuilder <debbuilder@nihilisme.ca>  Thu, 30 Aug 2012 13:37:57 -0400
+
 rpcmq (0.2-13) stable; urgency=low
 
   * Add support to RUN_AS_USER 
