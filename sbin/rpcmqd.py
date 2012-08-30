@@ -160,14 +160,14 @@ def main():
     rpcmqd_instance = args.config.split("/")[-1].split(".conf")[0]
 
     # Config vars
-    amqp_server = config.get("main", "amqp_server")
     run_as_uid = config.get("main", "run_as_uid")
     run_with_umask = config.get("main", "run_with_umask")
-    amqp_exchange = config.get("rpc-context", "exchange")
-    amqp_rkey = config.get("rpc-context", "routing_key")
-    virtualhost = config.get("rpc-context", "virtualhost")
-    username = config.get("rpc-context", "username")
-    password = config.get("rpc-context", "password")
+    amqp_server = config.get("bus", "amqp_server")
+    amqp_exchange = config.get("bus", "exchange")
+    amqp_rkey = config.get("bus", "routing_key")
+    virtualhost = config.get("bus", "virtualhost")
+    username = config.get("bus", "username")
+    password = config.get("bus", "password")
     ssl_enable = config.get("ssl", "enable")
     cacertfile = config.get("ssl", "cacertfile")
     certfile = config.get("ssl", "certfile")
@@ -185,7 +185,7 @@ def main():
                 umask=int(run_with_umask),
                 uid=pwd.getpwnam(run_as_uid).pw_uid,
                 gid=pwd.getpwnam(run_as_uid).pw_gid,
-                detach_process=False, # For debug purpose
+                #detach_process=False, # For debug purpose
                 stdout=stdout_file,
                 stderr=stdout_file,
                 pidfile=PidFile("run/" + rpcmqd_instance + ".pid")
