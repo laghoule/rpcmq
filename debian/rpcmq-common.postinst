@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Verify if rpcmq group exist
+groupmod rpcmq &> /dev/null
+if [ $? == 6 ] ; then
+        groupadd rpcmq
+fi
+
+# Verify of rpcmq user exist
+usermod rpcmq &> /dev/null
+if [ $? == 6 ]; then
+	useradd -g rpcmq -s /bin/false rpcmq
+fi
+
+chmod 770 /etc/rpcmq 
+chown root:rpcmq /etc/rpcmq 
+chown root:rpcmq /etc/rpcmq/rpcmqd-example.conf
