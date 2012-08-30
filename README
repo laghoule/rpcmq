@@ -14,15 +14,10 @@ Send remote command to a server via AMQP bus. I used this to make some automatio
 Install
 -------
 
-Debian way: Just build the package, debuild...
+Debian way: Just build the package with debuild
+http://www.ducea.com/2008/03/06/howto-recompile-debian-packages/
 
-To install the listening daemon: dpkg --install rpcmq-server
-To install the client: dpkg --install rpcmq-client
-
-The old way: 
-create /etc/rpcmq /opt/rpcmq
-copy etc/* /etc/rpcmq/
-copy bin sbin to /opt/rpcmq/
-copy rpc-scripts to /opt
+To install the listening daemon: dpkg --install rpcmq-common rpcmq-server
+To install the client: dpkg --install rpcmq-common rpcmq-client
 
 PS: AMQPS is currently broken in pika library, should be available in next version (0.9.6)

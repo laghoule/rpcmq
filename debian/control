@@ -7,10 +7,15 @@ Standards-Version: 3.8.4
 
 Package: rpcmq-server
 Architecture: any
-Depends: python-pika(>=0.9.5), python, sudo, python-daemon, python-argparse
+Depends: rpcmq-common, python-pika(>=0.9.5), python, python-daemon, python-argparse
 Description: Server consuming RPC call via AMQP protocol.
 
 Package: rpcmq-client
 Architecture: any
-Depends: python-pika(>=0.9.5), python, sudo, python-argparse
+Depends: rpcmq-common, python-pika(>=0.9.5), python, python-argparse
 Description: Client producing RPC call via AMQP protocol.
+
+Package: rpcmq-common
+Architecture: any
+Depends: python-pika(>=0.9.5), python
+Description: Common package to client and server
