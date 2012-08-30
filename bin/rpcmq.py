@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Written by Pascal Gauthier <pgauthier@onebigplanet.com>
+# Written by Pascal Gauthier <pgauthier@nihilisme.ca>
 # 03.09.2012 
 
 import os 
